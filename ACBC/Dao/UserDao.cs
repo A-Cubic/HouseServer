@@ -115,6 +115,86 @@ namespace ACBC.Dao
             string sql1 = builder1.ToString();
             return DatabaseOperationWeb.ExecuteDML(sql1);
         }
+
+        public List<Booking> getBookingList(string userPhone)
+        {
+            List<Booking> bookingList = new List<Booking>();
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat(ShipSqls.SELECT_BOOKING_BY_PHONE, userPhone);
+            string sql = builder.ToString();
+            DataTable dt = DatabaseOperationWeb.ExecuteSelectDS(sql, "T").Tables[0];
+            if (dt.Rows.Count > 0)
+            {
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    string bookingTime = dt.Rows[i]["booking_time_from"].ToString()+"-"+ dt.Rows[i]["booking_time_end"].ToString().Substring(10);
+                    string bookingStatus = "已预订";
+                    if (dt.Rows[i]["booking_status"].ToString()=="0")
+                    {
+                        bookingStatus = "已取消";
+                    }
+                    bool ifReturn = true;
+                    if (dt.Rows[i]["booking_status"].ToString() == "0"||Convert.ToDateTime(dt.Rows[i]["booking_time_from"].ToString())<DateTime.Now.AddMinutes(30))
+                    {
+                        ifReturn = false;
+                    }
+                    Booking booking = new Booking
+                    {
+                        bookingId=dt.Rows[i]["booking_id"].ToString(),
+                        bookingCode = dt.Rows[i]["booking_code"].ToString(),
+                        houseName = dt.Rows[i]["house_name"].ToString(),
+                        userPhone = dt.Rows[0]["user_phone"].ToString(),
+                        bookingStatus = bookingStatus,
+                        createTime = dt.Rows[i]["createTime"].ToString(),
+                        bookingTime = bookingTime,
+                        price = dt.Rows[i]["price"].ToString(),
+                        ifReturn = ifReturn ,
+                    };
+                    bookingList.Add(booking);
+                }
+
+            }
+            return bookingList;
+        }
+
+        public  Booking  getBooking(string bookingId)
+        {
+            Booking booking = new  Booking();
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat(ShipSqls.SELECT_BOOKING_BY_BOOKINGID, bookingId);
+            string sql = builder.ToString();
+            DataTable dt = DatabaseOperationWeb.ExecuteSelectDS(sql, "T").Tables[0];
+            if (dt.Rows.Count > 0)
+            {
+                string bookingTime = dt.Rows[0]["booking_time_from"].ToString() + "-" + dt.Rows[0]["booking_time_end"].ToString().Substring(10);
+                string bookingStatus = "已预订";
+                if (dt.Rows[0]["booking_status"].ToString() == "0")
+                {
+                    bookingStatus = "已取消";
+                }
+                bool ifReturn = true;
+                if (dt.Rows[0]["booking_status"].ToString() == "0" || Convert.ToDateTime(dt.Rows[0]["booking_time_from"].ToString()) < DateTime.Now.AddMinutes(30))
+                {
+                    ifReturn = false;
+                }
+                booking = new Booking
+                {
+                    bookingId = dt.Rows[0]["booking_id"].ToString(),
+                    bookingCode = dt.Rows[0]["booking_code"].ToString(),
+                    userPhone = dt.Rows[0]["user_phone"].ToString(),
+                    houseName = dt.Rows[0]["house_name"].ToString(),
+                    bookingStatus = bookingStatus,
+                    createTime = dt.Rows[0]["createTime"].ToString(),
+                    bookingTime = bookingTime,
+                    price = dt.Rows[0]["price"].ToString(),
+                    ifReturn = ifReturn,
+                };
+
+            }
+            return booking;
+        }
+
+
         public class ShipSqls
         {
             public const string SELECT_USER_BY_PHONE = "" +
@@ -137,10 +217,20 @@ namespace ACBC.Dao
             public const string SELECT_RECHARGE_BY_PHONE = "" +
                 "SELECT R.*,U.USER_NAME " +
                 "FROM T_LOG_RECHARGE R,T_USER_LIST U " +
-                "WHERE R.USER_PHONE =U.USER_PHONE  AND U.USER_PHONE = '{0}' ";
+                "WHERE R.USER_PHONE =U.USER_PHONE  AND U.USER_PHONE = '{0}' ORDER BY ID DESC";
             public const string UPDATE_PRICE = "" +
                 "UPDATE T_USER_LIST SET PRICE=PRICE-{1} " +
                 "WHERE USER_PHONE='{0}' ";
+            public const string SELECT_BOOKING_BY_PHONE = "" +
+                "SELECT B.*,H.HOUSE_NAME " +
+                "FROM T_BOOKING_LIST B ,T_BASE_HOUSE H " +
+                "WHERE B.HOUSE_ID = H.HOUSE_ID  AND USER_PHONE = '{0}' AND BOOKINGTYPE ='2' " +
+                "ORDER BY BOOKING_TIME_FROM DESC";
+            public const string SELECT_BOOKING_BY_BOOKINGID = "" +
+                "SELECT B.*,H.HOUSE_NAME " +
+                "FROM T_BOOKING_LIST B ,T_BASE_HOUSE H " +
+                "WHERE B.HOUSE_ID = H.HOUSE_ID  AND BOOKING_ID = '{0}' AND BOOKINGTYPE ='2' " +
+                "ORDER BY BOOKING_TIME_FROM DESC";
         }
         
     }

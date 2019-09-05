@@ -80,7 +80,7 @@ namespace ACBC.Buss
         }
 
         /// <summary>
-        /// 获取用户信息
+        /// 充值
         /// </summary>
         /// <param name="baseApi"></param>
         /// <returns></returns>
@@ -113,7 +113,7 @@ namespace ACBC.Buss
         }
 
         /// <summary>
-        /// 获取用户信息
+        /// 充值列表
         /// </summary>
         /// <param name="baseApi"></param>
         /// <returns></returns>
@@ -127,10 +127,32 @@ namespace ACBC.Buss
             if (param.userPhone == null || param.userPhone == "")
             {
                 throw new ApiException(CodeMessage.InterfaceValueError, "InterfaceValueError");
-            } 
+            }
             UserDao userDao = new UserDao();
 
             return userDao.getRechargeList(param.userPhone);
+        }
+        
+
+        /// <summary>
+        /// 订单列表
+        /// </summary>
+        /// <param name="baseApi"></param>
+        /// <returns></returns>
+        public object Do_GetBookingList(BaseApi baseApi)
+        {
+            UserParam param = JsonConvert.DeserializeObject<UserParam>(baseApi.param.ToString());
+            if (param == null)
+            {
+                throw new ApiException(CodeMessage.InvalidParam, "InvalidParam");
+            }
+            if (param.userPhone == null || param.userPhone == "")
+            {
+                throw new ApiException(CodeMessage.InterfaceValueError, "InterfaceValueError");
+            }
+            UserDao userDao = new UserDao();
+
+            return userDao.getBookingList(param.userPhone);
         }
     }
 }

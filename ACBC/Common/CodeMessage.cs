@@ -42,6 +42,10 @@ namespace ACBC.Common
 
         BookingInsertError = 20001,//预订房间失败
         CutPaymentError = 20002,//扣款失败
+        BookingUserError = 20003,//预订用户未找到
+        UserPriceError = 20004,//预订用户余额不足
+        BookingRefundError = 20005,//退房间失败
+        AddPaymentError = 20006,//退款失败
 
     }
 }

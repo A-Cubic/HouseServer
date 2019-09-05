@@ -131,6 +131,10 @@ namespace ACBC.Buss
         public string endTime;
         public string bookingPrice;
     }
+    public class BookingIdParam
+    {
+        public string bookingId;
+    }
     #endregion
 
     #region DaoObjs
@@ -206,6 +210,18 @@ namespace ACBC.Buss
         public List<string> beginTimes;
         public List<string> endTimes;
         public List<string> bookingPrices;
+    }
+    public class Booking
+    {
+        public string bookingId;
+        public string bookingCode;
+        public string houseName;
+        public string userPhone;
+        public string bookingStatus;
+        public string createTime;
+        public string bookingTime;
+        public string price;
+        public bool ifReturn;
     }
     #endregion
 }

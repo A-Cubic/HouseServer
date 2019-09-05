@@ -205,9 +205,16 @@ namespace ACBC.Dao
         public bool bookingHouse(BookingHouseParam param, string openId)
         {
             StringBuilder builder1 = new StringBuilder();
-            builder1.AppendFormat(ShipSqls.INSERT_BOOKINGLIST,openId, param.userPhone, param.houseId,
-                param.checkDate, param.checkDate+" "+param.beginTime+":00",
-                param.checkDate + " " + param.endTime + ":00", param.bookingPrice);
+            builder1.AppendFormat(ShipSqls.INSERT_BOOKINGLIST, openId, param.userPhone, param.houseId,
+                param.checkDate, param.checkDate + " " + param.beginTime + ":00",
+                param.checkDate + " " + param.endTime + ":00", param.bookingPrice, "B" + "yyyyMMddHHmmssff");
+            string sql1 = builder1.ToString();
+            return DatabaseOperationWeb.ExecuteDML(sql1);
+        }
+        public bool refundBooking( string bookingId)
+        {
+            StringBuilder builder1 = new StringBuilder();
+            builder1.AppendFormat(ShipSqls.UPDATE_STATUS_BY_BOOKINGCODE, bookingId);
             string sql1 = builder1.ToString();
             return DatabaseOperationWeb.ExecuteDML(sql1);
         }
@@ -240,9 +247,14 @@ namespace ACBC.Dao
                 "AND BOOKING_TIME_FROM >'{2}'";
             public const string INSERT_BOOKINGLIST = "" +
                 "INSERT INTO T_BOOKING_LIST(OPENID,USER_PHONE,HOUSE_ID,BOOKINGTYPE,BOOKING_STATUS," +
-                                 "CREATETIME,BOOKING_DATA,BOOKING_TIME_FROM,BOOKING_TIME_END,PRICE) " +
+                                 "CREATETIME,BOOKING_DATA,BOOKING_TIME_FROM,BOOKING_TIME_END,PRICE,BOOKING_CODE) " +
                 "VALUES('{0}','{1}',{2},'2','1'," +
-                        "NOW(),'{3}','{4}','{5}','{6}')";
+                        "NOW(),'{3}','{4}','{5}','{6}','{7}')";
+            public const string UPDATE_STATUS_BY_BOOKINGCODE = "" +
+                "UPDATE T_BOOKING_LIST " +
+                "SET BOOKING_STATUS='0' " +
+                "WHERE BOOKING_ID='{0}'";
+            
         }
 
     }

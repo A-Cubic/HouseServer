@@ -77,6 +77,7 @@ namespace ACBC.Dao
                 return false;
             }
         }
+
         public List<RechargeLog> getRechargeList(string userPhone)
         {
             List<RechargeLog> rechargeLogList = new List<RechargeLog>();
@@ -107,6 +108,13 @@ namespace ACBC.Dao
             }
             return rechargeLogList;
         }
+        public bool updateUserPrice(string userPhone,string price)
+        {
+            StringBuilder builder1 = new StringBuilder();
+            builder1.AppendFormat(ShipSqls.UPDATE_PRICE, userPhone, price);
+            string sql1 = builder1.ToString();
+            return DatabaseOperationWeb.ExecuteDML(sql1);
+        }
         public class ShipSqls
         {
             public const string SELECT_USER_BY_PHONE = "" +
@@ -130,6 +138,9 @@ namespace ACBC.Dao
                 "SELECT R.*,U.USER_NAME " +
                 "FROM T_LOG_RECHARGE R,T_USER_LIST U " +
                 "WHERE R.USER_PHONE =U.USER_PHONE  AND U.USER_PHONE = '{0}' ";
+            public const string UPDATE_PRICE = "" +
+                "UPDATE T_USER_LIST SET PRICE=PRICE-{1} " +
+                "WHERE USER_PHONE='{0}' ";
         }
         
     }

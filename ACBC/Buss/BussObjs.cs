@@ -120,6 +120,16 @@ namespace ACBC.Buss
         public string houseId;
         public string userPhone;
         public string checkDate;
+        public string beginTime;
+    }
+    public class BookingHouseParam
+    {
+        public string houseId;
+        public string checkDate;
+        public string userPhone;
+        public string beginTime;
+        public string endTime;
+        public string bookingPrice;
     }
     #endregion
 
@@ -195,6 +205,7 @@ namespace ACBC.Buss
     {
         public List<string> beginTimes;
         public List<string> endTimes;
+        public List<string> bookingPrices;
     }
     #endregion
 }

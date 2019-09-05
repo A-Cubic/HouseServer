@@ -39,6 +39,9 @@ namespace ACBC.Common
         MemberRegError = 10002,
         NoLoginError = 10003,
         RechargeError = 10004,
-        
+
+        BookingInsertError = 20001,//预订房间失败
+        CutPaymentError = 20002,//扣款失败
+
     }
 }

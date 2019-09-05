@@ -38,6 +38,27 @@ namespace ACBC.Dao
             }
             return list;
         }
+        public House getHouseByHouseId(string houseId)
+        {
+            House house = null;
+            StringBuilder builder1 = new StringBuilder();
+            builder1.AppendFormat(ShipSqls.SELECT_HOUSELIST_BY_HOUSEID, houseId);
+            string sql1 = builder1.ToString();
+            DataTable dt1 = DatabaseOperationWeb.ExecuteSelectDS(sql1, "T").Tables[0];
+            if (dt1.Rows.Count > 0)
+            {
+                house = new House
+                {
+                    houseId = dt1.Rows[0]["house_id"].ToString(),
+                    houseName = dt1.Rows[0]["house_name"].ToString(),
+                    houseImg = dt1.Rows[0]["house_img"].ToString(),
+                    peopleNum = dt1.Rows[0]["people_num"].ToString(),
+                    hourPrice = dt1.Rows[0]["hour_price"].ToString(),
+                    remark = dt1.Rows[0]["remark"].ToString(),
+                };
+            }
+            return house;
+        }
         public HouseBookingDateInfo getHouseBookingDateInfo(HouseBookingParam param)
         {
             HouseBookingDateInfo houseBookingDateInfo = new HouseBookingDateInfo();
@@ -52,7 +73,7 @@ namespace ACBC.Dao
             {
                 for (int i = 0; i < dt.Rows.Count; i++)
                 {
-                    if (dt.Rows[i]["BOOKINGTYPE"].ToString()=="1")
+                    if (dt.Rows[i]["BOOKINGTYPE"].ToString() == "1")
                     {
                         DisableDay disableDay = new DisableDay
                         {
@@ -84,23 +105,7 @@ namespace ACBC.Dao
                     }
                 }
             }
-            StringBuilder builder1 = new StringBuilder();
-            builder1.AppendFormat(ShipSqls.SELECT_HOUSELIST_BY_HOUSEID, param.houseId);
-            string sql1 = builder1.ToString();
-            DataTable dt1 = DatabaseOperationWeb.ExecuteSelectDS(sql1, "T").Tables[0];
-            if (dt1.Rows.Count > 0)
-            {
-                House house = new House
-                {
-                    houseId = dt1.Rows[0]["house_id"].ToString(),
-                    houseName = dt1.Rows[0]["house_name"].ToString(),
-                    houseImg = dt1.Rows[0]["house_img"].ToString(),
-                    peopleNum = dt1.Rows[0]["people_num"].ToString(),
-                    hourPrice = dt1.Rows[0]["hour_price"].ToString(),
-                    remark = dt1.Rows[0]["remark"].ToString(),
-                };
-                houseBookingDateInfo.house = house;
-            }
+            houseBookingDateInfo.house = getHouseByHouseId(param.houseId);
             return houseBookingDateInfo;
         }
 
@@ -110,34 +115,101 @@ namespace ACBC.Dao
 
             houseBookingDateTimeInfo.beginTimes = new List<string>();
             houseBookingDateTimeInfo.endTimes = new List<string>();
+
+            House house = getHouseByHouseId(param.houseId);
+
             StringBuilder builder = new StringBuilder();
-            builder.AppendFormat(ShipSqls.SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA, param.houseId,param.checkDate);
+            builder.AppendFormat(ShipSqls.SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA, param.houseId, param.checkDate);
             string sql = builder.ToString();
             DataTable dt = DatabaseOperationWeb.ExecuteSelectDS(sql, "T").Tables[0];
-            if (dt.Rows.Count > 0)
+
+            DateTime begin = Convert.ToDateTime(param.checkDate + " 09:00:00");
+            DateTime end = Convert.ToDateTime(param.checkDate + " 19:00:00");
+            List<string> beginTimes = new List<string>();
+            List<string> endTimes = new List<string>();
+            List<string> bookingPrices = new List<string>();
+
+            DateTime dateTime = begin;
+            int i = 0;
+            int count = 0;
+            bool ifEndClose = false;
+            while (dateTime < end)
             {
-                DateTime begin = Convert.ToDateTime(param.checkDate + " 09:00:00");
-                DateTime end = Convert.ToDateTime(param.checkDate + " 19:00:00");
-                List<string> beginTimes = new List<string>();
-                List<string> endTimes = new List<string>();
-                DateTime dateTime = begin;
-                int i = 0;
-                while (dateTime<end)
+                if (i == dt.Rows.Count || dateTime.AddMinutes(30) <= Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"]))
                 {
-                    if (dateTime.AddMinutes(30)<= Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"])){
-                        beginTimes.Add(dateTime.ToString("HH:mm"));
-                        dateTime = dateTime.AddMinutes(15);
-                        endTimes.Add(dateTime.ToString("HH:mm"));
-                    }
-                    else
+                    beginTimes.Add(dateTime.ToString("HH:mm"));
+                    dateTime = dateTime.AddMinutes(15);
+                    count++;
+                    if (!ifEndClose)
                     {
-                        dateTime = Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"]).AddMinutes(15);
+                        endTimes.Add(dateTime.ToString("HH:mm"));
+                        bookingPrices.Add(Convert.ToString(Convert.ToDouble( house.hourPrice)/4*count));
                     }
                 }
-                houseBookingDateTimeInfo.beginTimes = beginTimes;
-                houseBookingDateTimeInfo.endTimes = endTimes;
+                else
+                {
+                    dateTime = Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_END"]).AddMinutes(15);
+                    i++;
+                    if (endTimes.Count>0)
+                    {
+                        ifEndClose = true;
+                    }
+                    
+                }
             }
+            houseBookingDateTimeInfo.beginTimes = beginTimes;
+            houseBookingDateTimeInfo.endTimes = endTimes;
+            houseBookingDateTimeInfo.bookingPrices = bookingPrices;
+
             return houseBookingDateTimeInfo;
+        }
+
+        public HouseBookingDateTimeInfo getHouseDataTimeInfoListByBeginTime(HouseBookingParam param)
+        {
+            HouseBookingDateTimeInfo houseBookingDateTimeInfo = new HouseBookingDateTimeInfo();
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat(ShipSqls.SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA_AND_TIME,
+                                    param.houseId, param.checkDate, param.checkDate + " " + param.beginTime);
+            string sql = builder.ToString();
+            DataTable dt = DatabaseOperationWeb.ExecuteSelectDS(sql, "T").Tables[0];
+
+            House house = getHouseByHouseId(param.houseId);
+            DateTime begin = Convert.ToDateTime(param.checkDate + " " + param.beginTime);
+            DateTime end = Convert.ToDateTime(param.checkDate + " 19:00:00");
+            List<string> endTimes = new List<string>();
+            List<string> bookingPrices = new List<string>();
+
+            DateTime dateTime = begin;
+            int i = 0;
+            int count = 0;
+            while (dateTime < end)
+            {
+                if (i == dt.Rows.Count || dateTime.AddMinutes(30) <= Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"]))
+                {
+                    dateTime = dateTime.AddMinutes(15);
+                    count++;
+                    endTimes.Add(dateTime.ToString("HH:mm"));
+                    bookingPrices.Add(Convert.ToString(Convert.ToDouble(house.hourPrice) / 4 * count));
+                }
+                else
+                {
+                    dateTime = Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_END"]).AddMinutes(15);
+                    i++;
+                    break;
+                }
+            }
+            houseBookingDateTimeInfo.endTimes = endTimes;
+            houseBookingDateTimeInfo.bookingPrices = bookingPrices;
+            return houseBookingDateTimeInfo;
+        }
+        public bool bookingHouse(BookingHouseParam param, string openId)
+        {
+            StringBuilder builder1 = new StringBuilder();
+            builder1.AppendFormat(ShipSqls.INSERT_BOOKINGLIST,openId, param.userPhone, param.houseId,
+                param.checkDate, param.checkDate+" "+param.beginTime+":00",
+                param.checkDate + " " + param.endTime + ":00", param.bookingPrice);
+            string sql1 = builder1.ToString();
+            return DatabaseOperationWeb.ExecuteDML(sql1);
         }
 
         public class ShipSqls
@@ -160,7 +232,18 @@ namespace ACBC.Dao
                 "FROM T_BOOKING_LIST " +
                 "WHERE HOUSE_ID ='{0}' AND BOOKING_DATA='{1}' " +
                 "AND BOOKING_STATUS='1' AND BOOKINGTYPE='2'";
+            public const string SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA_AND_TIME = "" +
+                "SELECT BOOKING_TIME_FROM,BOOKING_TIME_END " +
+                "FROM T_BOOKING_LIST " +
+                "WHERE HOUSE_ID ='{0}' AND BOOKING_DATA='{1}' " +
+                "AND BOOKING_STATUS='1' AND BOOKINGTYPE='2' " +
+                "AND BOOKING_TIME_FROM >'{2}'";
+            public const string INSERT_BOOKINGLIST = "" +
+                "INSERT INTO T_BOOKING_LIST(OPENID,USER_PHONE,HOUSE_ID,BOOKINGTYPE,BOOKING_STATUS," +
+                                 "CREATETIME,BOOKING_DATA,BOOKING_TIME_FROM,BOOKING_TIME_END,PRICE) " +
+                "VALUES('{0}','{1}',{2},'2','1'," +
+                        "NOW(),'{3}','{4}','{5}','{6}')";
         }
-        
+
     }
 }

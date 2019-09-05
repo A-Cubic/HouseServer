@@ -38,7 +38,7 @@ namespace ACBC.Dao
             }
             return list;
         }
-        public HouseBookingDateInfo getHouseBookingDateInfo(HouseBookingDateParam param)
+        public HouseBookingDateInfo getHouseBookingDateInfo(HouseBookingParam param)
         {
             HouseBookingDateInfo houseBookingDateInfo = new HouseBookingDateInfo();
 
@@ -103,6 +103,43 @@ namespace ACBC.Dao
             }
             return houseBookingDateInfo;
         }
+
+        public HouseBookingDateTimeInfo getHouseDataTimeInfoList(HouseBookingParam param)
+        {
+            HouseBookingDateTimeInfo houseBookingDateTimeInfo = new HouseBookingDateTimeInfo();
+
+            houseBookingDateTimeInfo.beginTimes = new List<string>();
+            houseBookingDateTimeInfo.endTimes = new List<string>();
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat(ShipSqls.SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA, param.houseId,param.checkDate);
+            string sql = builder.ToString();
+            DataTable dt = DatabaseOperationWeb.ExecuteSelectDS(sql, "T").Tables[0];
+            if (dt.Rows.Count > 0)
+            {
+                DateTime begin = Convert.ToDateTime(param.checkDate + " 09:00:00");
+                DateTime end = Convert.ToDateTime(param.checkDate + " 19:00:00");
+                List<string> beginTimes = new List<string>();
+                List<string> endTimes = new List<string>();
+                DateTime dateTime = begin;
+                int i = 0;
+                while (dateTime<end)
+                {
+                    if (dateTime.AddMinutes(30)<= Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"])){
+                        beginTimes.Add(dateTime.ToString("HH:mm"));
+                        dateTime = dateTime.AddMinutes(15);
+                        endTimes.Add(dateTime.ToString("HH:mm"));
+                    }
+                    else
+                    {
+                        dateTime = Convert.ToDateTime(dt.Rows[i]["BOOKING_TIME_FROM"]).AddMinutes(15);
+                    }
+                }
+                houseBookingDateTimeInfo.beginTimes = beginTimes;
+                houseBookingDateTimeInfo.endTimes = endTimes;
+            }
+            return houseBookingDateTimeInfo;
+        }
+
         public class ShipSqls
         {
             public const string SELECT_HOUSELIST = "" +
@@ -118,6 +155,11 @@ namespace ACBC.Dao
                        "MONTH(BOOKING_DATA) BOOKINGMONTH,YEAR(BOOKING_DATA) BOOKINGYEAR " +
                 "FROM T_BOOKING_LIST " +
                 "WHERE HOUSE_ID ='{0}' AND BOOKING_DATA>NOW() AND BOOKING_STATUS='1'";
+            public const string SELECT_HOUSELIST_TIME_BY_HOUSEID_AND_DATA = "" +
+                "SELECT BOOKING_TIME_FROM,BOOKING_TIME_END " +
+                "FROM T_BOOKING_LIST " +
+                "WHERE HOUSE_ID ='{0}' AND BOOKING_DATA='{1}' " +
+                "AND BOOKING_STATUS='1' AND BOOKINGTYPE='2'";
         }
         
     }

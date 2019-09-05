@@ -115,10 +115,11 @@ namespace ACBC.Buss
         public string remark;
         public double store;
     }
-    public class HouseBookingDateParam
+    public class HouseBookingParam
     {
         public string houseId;
         public string userPhone;
+        public string checkDate;
     }
     #endregion
 
@@ -189,6 +190,11 @@ namespace ACBC.Buss
         public string year;
         public string month;
         public string day;
+    }
+    public class HouseBookingDateTimeInfo
+    {
+        public List<string> beginTimes;
+        public List<string> endTimes;
     }
     #endregion
 }

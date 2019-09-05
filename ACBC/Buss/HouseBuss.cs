@@ -37,7 +37,7 @@ namespace ACBC.Buss
         /// <returns></returns>
         public object Do_GetBookingDateInfo(BaseApi baseApi)
         {
-            HouseBookingDateParam param = JsonConvert.DeserializeObject<HouseBookingDateParam>(baseApi.param.ToString());
+            HouseBookingParam param = JsonConvert.DeserializeObject<HouseBookingParam>(baseApi.param.ToString());
             if (param == null)
             {
                 throw new ApiException(CodeMessage.InvalidParam, "InvalidParam");
@@ -48,9 +48,35 @@ namespace ACBC.Buss
             }
             string openId = Utils.GetOpenID(baseApi.token);
             HouseDao houseDao = new HouseDao();
-            
+
             return houseDao.getHouseBookingDateInfo(param);
         }
 
+        /// <summary>
+        /// 获取房间预订信息
+        /// </summary>
+        /// <param name="baseApi"></param>
+        /// <returns></returns>
+        public object Do_GetHouseDataTimeInfoList(BaseApi baseApi)
+        {
+            HouseBookingParam param = JsonConvert.DeserializeObject<HouseBookingParam>(baseApi.param.ToString());
+            if (param == null)
+            {
+                throw new ApiException(CodeMessage.InvalidParam, "InvalidParam");
+            }
+            if (param.houseId == null || param.houseId == "")
+            {
+                throw new ApiException(CodeMessage.InterfaceValueError, "InterfaceValueError");
+            }
+            if (param.checkDate == null || param.checkDate == "")
+            {
+                throw new ApiException(CodeMessage.InterfaceValueError, "InterfaceValueError");
+            }
+            string openId = Utils.GetOpenID(baseApi.token);
+            HouseDao houseDao = new HouseDao();
+
+            return houseDao.getHouseDataTimeInfoList(param);
+        }
+        
     }
 }
